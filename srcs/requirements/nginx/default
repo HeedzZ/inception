@@ -1,0 +1,33 @@
+server {
+    # Écoute sur le port 443 avec SSL
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name login.42.fr;
+
+    # Certificats générés dans le Dockerfile
+    ssl_certificate /etc/nginx/ssl/inception.crt;
+    ssl_certificate_key /etc/nginx/ssl/inception.key;
+
+    # Protocoles TLS
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # Racine des fichiers du site
+    root /var/www/html;
+
+    index index.php index.html index.htm index.nginx-debian.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass wordpress:9000;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
