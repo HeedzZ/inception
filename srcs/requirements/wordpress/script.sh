@@ -1,50 +1,47 @@
 #!/bin/bash
 
-# Définir le chemin de WordPress
-WP_PATH="/var/www/html"
+# Attendre que MariaDB soit prêt avant d'exécuter la configuration de WordPress
+until mysql -h "mariadb" -u"$DB_USER" -p"$DB_PASS" -e "SELECT 1;" &> /dev/null; do
+    echo "En attente de MariaDB..."
+    sleep 2
+done
 
-# Télécharger et configurer WP-CLI si nécessaire
-if [ ! -f "/usr/local/bin/wp" ]; then
-    echo "Téléchargement de WP-CLI..."
-    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-    chmod +x wp-cli.phar
-    mv wp-cli.phar /usr/local/bin/wp
+echo "MariaDB est prêt, installation de WordPress..."
+
+cd /var/www/html
+
+# Télécharger WP-CLI
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+
+# Télécharger WordPress
+./wp-cli.phar core download --allow-root
+
+# Vérifier si wp-config.php existe déjà avant de le recréer
+if [ ! -f "wp-config.php" ]; then
+    echo "Création de wp-config.php..."
+    ./wp-cli.phar config create \
+        --dbname="$DB_NAME" \
+        --dbuser="$DB_USER" \
+        --dbpass="$DB_PASS" \
+        --dbhost="mariadb:3306" \
+        --allow-root
+else
+    echo "wp-config.php existe déjà, pas besoin de le recréer."
 fi
 
 # Vérifier si WordPress est déjà installé
-if [ ! -f "$WP_PATH/wp-config.php" ]; then
+if ! ./wp-cli.phar core is-installed --allow-root; then
     echo "Installation de WordPress..."
-
-    # Télécharger WordPress
-    wp core download --path=$WP_PATH --allow-root
-
-    # Créer le fichier de configuration wp-config.php
-    wp config create \
-        --dbname=${DB_NAME} \
-        --dbuser=${DB_USER} \
-        --dbpass=${DB_PASS} \
-        --dbhost=${DB_HOST:-mariadb} \
-        --path=$WP_PATH \
+    ./wp-cli.phar core install \
+        --url="$DOMAIN_NAME" \
+        --title="$SITE_TITLE" \
+        --admin_user="$ADMIN_USER" \
+        --admin_password="$ADMIN_PASS" \
+        --admin_email="$ADMIN_EMAIL" \
         --allow-root
-
-    # Installer WordPress
-    wp core install \
-        --url=${DOMAIN_NAME:-ymostows.42.fr} \
-        --title=${SITE_TITLE:-inception} \
-        --admin_user=${ADMIN_USER} \
-        --admin_password=${ADMIN_PASS} \
-        --admin_email=${ADMIN_EMAIL:-admin@admin.com} \
-        --path=$WP_PATH \
-        --allow-root
-
-    echo "WordPress installé avec succès."
 else
     echo "WordPress est déjà installé."
-
-    # Mettre à jour les URLs si nécessaire
-    echo "Mise à jour des URLs WordPress..."
-    wp option update siteurl ${DOMAIN_NAME:-https://ymostows.42.fr} --path=$WP_PATH --allow-root
-    wp option update home ${DOMAIN_NAME:-https://ymostows.42.fr} --path=$WP_PATH --allow-root
 fi
 
 # Lancer PHP-FPM

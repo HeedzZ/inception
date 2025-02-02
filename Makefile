@@ -18,4 +18,9 @@ clean: down
 	$(COMPOSE) -f $(COMPOSE_FILE) rm -f
 	$(COMPOSE) -f $(COMPOSE_FILE) down --volumes --remove-orphans
 
+bigclean: down
+	$(COMPOSE) -f $(COMPOSE_FILE) rm -f
+	$(COMPOSE) -f $(COMPOSE_FILE) down --volumes --remove-orphans
+	sudo rm -rf srcs/web srcs/database
+
 re: clean all

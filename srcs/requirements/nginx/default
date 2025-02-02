@@ -3,7 +3,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name login.42.fr;
+    server_name ymostows.42.fr;
 
     # Certificats générés dans le Dockerfile
     ssl_certificate /etc/nginx/ssl/inception.crt;
