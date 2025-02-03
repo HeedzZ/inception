@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:bookworm
 
 RUN apt update && apt upgrade && apt install -y php-fpm php-mysqli curl mariadb-client
 

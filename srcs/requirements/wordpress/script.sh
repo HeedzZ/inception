@@ -44,5 +44,12 @@ else
     echo "WordPress est déjà installé."
 fi
 
+if ! ./wp-cli.phar user list --allow-root | grep -q "$WP_USER"; then
+    echo "Création de l'utilisateur WordPress supplémentaire..."
+    ./wp-cli.phar user create "$WP_USER" "$WP_EMAIL" --role="$WP_ROLE" --user_pass="$WP_PASS" --allow-root
+else
+    echo "L'utilisateur WordPress $WP_USER existe déjà."
+fi
+
 # Lancer PHP-FPM
 php-fpm8.2 -F
