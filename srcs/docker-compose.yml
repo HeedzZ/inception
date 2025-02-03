@@ -35,7 +35,17 @@ services:
 
 volumes:
   web:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ymostows/data/web
+      o: bind
   database:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ymostows/data/database
+      o: bind
 
 networks:
   inception:
